@@ -5,4 +5,5 @@
  * @author Alexander Rose <alex@rose-a.de>
  */
 
-//$conf['fixme']    = 'FIXME';
+$conf['namespace']  = 'users';
+$conf['template']	= 'users:template';

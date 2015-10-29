@@ -1,0 +1,7 @@
+base   userprofile
+author Alexander Rose
+email  alex@rose-a.de
+date   2015-10-29
+name   userprofile plugin
+desc   Creates a page on adding a user which displays the entered profile info
+url    https://gitlab.com/arose/

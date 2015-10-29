@@ -1,9 +1,9 @@
-userprofile Plugin for DokuWiki
+# userprofile Plugin for DokuWiki
 
 Creates a page on adding a user which displays the entered profile info
 
 All documentation for this plugin can be found at
-https://gitlab.com/arose/
+https://gitlab.com/arose/dokuwiki-userprofile-plugin
 
 If you install this plugin manually, make sure it is installed in
 lib/plugins/userprofile/ - if the folder is called different it

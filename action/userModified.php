@@ -105,13 +105,14 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         
         // if page exists, delete it by writing an empty string to $text
         if($exists)
-            saveWikiText($id, "", "deleted by userprofile plugin"); 
+            saveWikiText($id, "", "deleted by userprofile plugin (user deleted)"); 
     }
     
     /**
      * Modifies a userprofile page
      * 
-     * @param array     $params the data['params'] component of the AUTH_USER_CHANGE event
+     * @param array $params                 the data['params'] component of the AUTH_USER_CHANGE event
+     * @param bool $modification_result     the modification was accepted
      *
      * @return void
      */
@@ -169,6 +170,13 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         
     }
     
+     /**
+     * Appends an underscore to the key if the key's last character is a 's'
+     * 
+     * @param string $key   the datafield name
+     *
+     * @return string       the escaped key
+     */
     private function _dataFieldEscapeMulti($key){
         // if the last char of key is an 's' append an underscore
         if(substr($key, -1) == 's') return $key .= "_";

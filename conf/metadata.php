@@ -6,5 +6,6 @@
  */
 
 
-//$meta['fixme'] = array('string');
+$meta['namespace'] 	= 'users';
+$meta['template']	= 'users:template';
 

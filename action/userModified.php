@@ -97,7 +97,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         //$template = $this->getConf('template');
         
         // extract event params
-        $user = $params[0];
+        $user = $params[0][0];
         $id = $user;
         
         // check if page exists

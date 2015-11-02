@@ -75,7 +75,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         // add a row for each field member
         foreach($fields as $key => $value){
             // add key : value line to text
-            $text.= _dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
+            $text.= $this->_dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
         }
         // close dataentry block
         $text.= "----";
@@ -144,7 +144,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         // get current raw text from page
         $text = rawWiki($id);
         foreach($changed as $key => $value){
-            $escapedkey = _dataFieldEscapeMulti($key);
+            $escapedkey = $this->_dataFieldEscapeMulti($key);
             // replace value
             $text = preg_replace('/^'.$escapedkey.'([:\s]+)(.*)$/m', $escapedkey.'$1'.$value, $text);
         }

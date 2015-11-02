@@ -57,8 +57,8 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      */
     private function _createProfile($params) {
         // get config vars
-        $ns = getConf('namespace');
-        //$template = getConf('template');
+        $ns = $this->getConf('namespace');
+        //$template = $this->getConf('template');
         
         // extract event params
         $user = $params[0];
@@ -93,8 +93,8 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      */
     private function _deleteProfile($params) {
         // get config vars
-        $ns = getConf('namespace');
-        //$template = getConf('template');
+        $ns = $this->getConf('namespace');
+        //$template = $this->getConf('template');
         
         // extract event params
         $user = $params[0];
@@ -118,8 +118,8 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      */
     private function _modifyProfile($params, $modification_result) {
         // get config vars
-        $ns = getConf('namespace');
-        //$template = getConf('template');
+        $ns = $this->getConf('namespace');
+        //$template = $this->getConf('template');
         
         // extract event params
         $user = $params[0];

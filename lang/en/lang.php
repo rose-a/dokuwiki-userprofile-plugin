@@ -6,10 +6,13 @@
  */
 
 // menu entry for admin plugins
+$lang['menu'] = 'Userprofile';
 $lang['menu_fields'] = 'Userprofile: Custom fields';
 
 // custom language strings for the plugin
-// $lang['fixme'] = 'FIXME';
+$lang['name'] = 'Fieldname';
+$lang['title'] = 'Title for display';
+$lang['defaultval'] = 'Default Value (comma separated values result in a select box)';
 
 
 

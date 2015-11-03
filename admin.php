@@ -12,7 +12,7 @@ if (!defined('DOKU_INC')) die();
 /**
  * Administration form for configuring the additional profile fields
  */
-class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
+class admin_plugin_userprofile extends DokuWiki_Admin_Plugin {
     /**
      * will hold the userprofile helper plugin
      * @var helper_plugin_userprofile
@@ -23,7 +23,8 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
      * Constructor. Load helper plugin
      */
     public function __construct(){
-        $this->db = plugin_load('helper', 'userprofile');
+        
+        $this->hlp = plugin_load('helper', 'userprofile');
     }
 
     /**
@@ -51,9 +52,9 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
      * @param string $language lang code
      * @return string menu string
      */
-    public function getMenuText($language) {
-        return $this->getLang('menu_alias');
-    }
+    // public function getMenuText($language) {
+    //     return $this->getLang('menu_alias');
+    // }
 
 
     /**
@@ -94,12 +95,14 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
      * Output html of the admin page
      */
     public function html() {
+        ptln('<p>'.htmlspecialchars('Hello world').'</p>');
         $sqlite = $this->hlp->_getDB();
         if(!$sqlite) return;
+        ptln('<p>'.htmlspecialchars('Hello sqlite').'</p>');
 
         //echo $this->locale_xhtml('admin_intro');
 
-        $sql = "SELECT * FROM aliases ORDER BY name";
+        $sql = "SELECT * FROM fields ORDER BY name";
         $res = $sqlite->query($sql);
         $rows = $sqlite->res2arr($res);
 
@@ -110,12 +113,12 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             '<tr>'.
             '<th>'.$this->getLang('name').'</th>'.
             '<th>'.$this->getLang('title').'</th>'.
-            '<th>'.$this->getLang('default').'</th>'.
+            '<th>'.$this->getLang('defaultval').'</th>'.
             '</tr>'
         );
 
         // add empty row for adding a new entry
-        $rows[] = array('name'=>'','title'=>'','default'=>'');
+        $rows[] = array('name'=>'','title'=>'','defaultval'=>'');
 
         $cur = 0;
         foreach($rows as $row){
@@ -130,7 +133,7 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $form->addElement('</td>');
 
             $form->addElement('<td>');
-            $form->addElement(form_makeTextField('d['.$cur.'][default]',$row['default'],''));
+            $form->addElement(form_makeTextField('d['.$cur.'][defaultval]',$row['defaultval'],''));
             $form->addElement('</td>');
             
             $form->addElement('</tr>');

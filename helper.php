@@ -14,6 +14,22 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
      * @var helper_plugin_sqlite initialized via _getDb()
      */
     protected $db = null;
+    
+    /**
+     * get the user defined fields
+     *
+     * @return array|false custom profile fields or false if failed
+     */
+    function getFields() {
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        $sql = "SELECT * FROM fields";
+        $res = $sqlite->query($sql);
+        $rows = $sqlite->res2arr($res);
+        
+        return $rows;
+    }
 	
 	/**
      * load the sqlite helper

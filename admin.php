@@ -61,28 +61,28 @@ class admin_plugin_userprofile extends DokuWiki_Admin_Plugin {
      * Carry out required processing
      */
     public function handle() {
-        if(!is_array($_REQUEST['d']) || !checkSecurityToken()) return;
+        if(!is_array($_REQUEST['up']) || !checkSecurityToken()) return;
 
         $sqlite = $this->hlp->_getDB();
         if(!$sqlite) return;
 
         $sqlite->query("BEGIN TRANSACTION");
-        if (!$sqlite->query("DELETE FROM aliases")) {
+        if (!$sqlite->query("DELETE FROM fields")) {
             $sqlite->query('ROLLBACK TRANSACTION');
             return;
         }
-        foreach($_REQUEST['d'] as $row){
+        foreach($_REQUEST['up'] as $row){
             $row = array_map('trim',$row);
             $row['name'] = utf8_strtolower($row['name']);
             $row['name'] = rtrim($row['name'],'s');
             if(!$row['name']) continue;
 
             // Clean default
-            $arr = preg_split('/\s*,\s*/', $row['default']);
+            $arr = preg_split('/\s*,\s*/', $row['defaultval']);
             $arr = array_unique($arr);
-            $row['default'] = implode(', ', $arr);
+            $row['defaultval'] = implode(', ', $arr);
 
-            if (!$sqlite->query("INSERT INTO aliases (name, title, default)
+            if (!$sqlite->query("INSERT INTO fields (name, title, defaultval)
                                  VALUES (?,?,?)",$row)) {
                 $sqlite->query('ROLLBACK TRANSACTION');
                 return;
@@ -95,19 +95,17 @@ class admin_plugin_userprofile extends DokuWiki_Admin_Plugin {
      * Output html of the admin page
      */
     public function html() {
-        ptln('<p>'.htmlspecialchars('Hello world').'</p>');
         $sqlite = $this->hlp->_getDB();
         if(!$sqlite) return;
-        ptln('<p>'.htmlspecialchars('Hello sqlite').'</p>');
 
-        //echo $this->locale_xhtml('admin_intro');
+        echo $this->locale_xhtml('admin_intro');
 
-        $sql = "SELECT * FROM fields ORDER BY name";
+        $sql = "SELECT * FROM fields";
         $res = $sqlite->query($sql);
         $rows = $sqlite->res2arr($res);
 
         $form = new Doku_Form(array('method'=>'post'));
-        $form->addHidden('page','data_aliases');
+        $form->addHidden('page','userprofile');
         $form->addElement(
             '<table class="inline">'.
             '<tr>'.
@@ -125,15 +123,15 @@ class admin_plugin_userprofile extends DokuWiki_Admin_Plugin {
             $form->addElement('<tr>');
 
             $form->addElement('<td>');
-            $form->addElement(form_makeTextField('d['.$cur.'][name]',$row['name'],''));
+            $form->addElement(form_makeTextField('up['.$cur.'][name]',$row['name'],''));
             $form->addElement('</td>');
             
             $form->addElement('<td>');
-            $form->addElement(form_makeTextField('d['.$cur.'][title]',$row['title'],''));
+            $form->addElement(form_makeTextField('up['.$cur.'][title]',$row['title'],''));
             $form->addElement('</td>');
 
             $form->addElement('<td>');
-            $form->addElement(form_makeTextField('d['.$cur.'][defaultval]',$row['defaultval'],''));
+            $form->addElement(form_makeTextField('up['.$cur.'][defaultval]',$row['defaultval'],''));
             $form->addElement('</td>');
             
             $form->addElement('</tr>');

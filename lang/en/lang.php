@@ -6,14 +6,12 @@
  */
 
 // menu entry for admin plugins
-$lang['menu'] = 'Userprofile';
-$lang['menu_fields'] = 'Userprofile: Custom fields';
+$lang['menu'] = 'Userprofile Custom fields';
 
 // custom language strings for the plugin
 $lang['name'] = 'Fieldname';
 $lang['title'] = 'Title for display';
 $lang['defaultval'] = 'Default Value (comma separated values result in a select box)';
-
-
+$lang['submit'] = 'Save';
 
 //Setup VIM: ex: et ts=4 :

@@ -1,0 +1,5 @@
+====== Setup Userprofile Fields ======
+
+This interface allows you to define custom fields for a users profile.
+
+Refer to the [[doku>plugin:data|plugin description]] for more info about aliases.

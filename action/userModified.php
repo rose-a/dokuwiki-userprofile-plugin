@@ -10,6 +10,19 @@
 if(!defined('DOKU_INC')) die();
 
 class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
+    
+    /**
+     * will hold the userprofile helper plugin
+     * @var helper_plugin_userprofile
+     */
+    protected $hlp = null;
+
+   /**
+     * Constructor. Load helper plugin
+     */
+    public function __construct(){
+        $this->hlp = plugin_load('helper', 'userprofile');
+    }
 
     /**
      * Registers a callback function for a given event
@@ -56,6 +69,9 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      * @return void
      */
     private function _createProfile($params) {
+        // return if user belongs to group 'noprofile' 
+        if(in_array('noprofile', $params[4])) return;
+        
         // get config vars
         $ns = $this->getConf('namespace');
         //$template = $this->getConf('template');
@@ -75,13 +91,13 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         // add a row for each field member
         foreach($fields as $key => $value){
             // add key : value line to text
-            $text.= $this->_dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
+            $text.= $this->hlp->_dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
         }
         // close dataentry block
         $text.= "----";
         
         // create userprofile page
-        saveWikiText($id, $text, "created by userprofile plugin"); 
+        saveWikiText($id, $text, "userprofile plugin: profile page created"); 
     }
     
     /**
@@ -105,7 +121,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         
         // if page exists, delete it by writing an empty string to $text
         if($exists)
-            saveWikiText($id, "", "deleted by userprofile plugin (user deleted)"); 
+            saveWikiText($id, "", "userprofile plugin: deleted (user deleted)"); 
     }
     
     /**
@@ -117,6 +133,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      * @return void
      */
     private function _modifyProfile($params, $modification_result) {
+        global $auth;
         // get config vars
         $ns = $this->getConf('namespace');
         //$template = $this->getConf('template');
@@ -129,24 +146,37 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         // check if page exists
         resolve_pageid($ns,$id,$exists);
         
+        // get userdata
+        $userdata = $auth->getUserData($user, false);
+        print_r($this->_auth);
+        $noprofile = in_array('noprofile', $userdata['grps']);
+        
         // if page does not exist, build a "create" param-array and call _createProfile()
-        if(!$exists && $userdata = getUserData($user, false) ){
-            $createparams[0] = $user;
-            $createparams[2] = $userdata['name'];
-            $createparams[3] = $userdata['mail'];
-            $this->_createProfile($createparams);
+        if(!$exists){
+            if(!$noprofile){
+                $createparams[0] = $user;
+                $createparams[2] = $userdata['name'];
+                $createparams[3] = $userdata['mail'];
+                $this->_createProfile($createparams);
+            }
             return;
         } 
         
         // else check modification_result
         if(!$modification_result) return;
         
+        // check noprofile group
+        if($noprofile){
+            saveWikiText($id, "", "userprofile plugin: deleted (user added to 'noprofile' group)"); 
+            return;
+        }
+        
         // get current raw text from page
         $text = rawWiki($id);
         foreach($changed as $key => $value){
-            $escapedkey = $this->_dataFieldEscapeMulti($key);
+            $escapedkey = $this->hlp->_dataFieldEscapeMulti($key);
             // replace value
-            $text = preg_replace('/^'.$escapedkey.'([:\s]+)(.*)$/m', $escapedkey.'$1'.$value, $text);
+            $text = preg_replace('/^'.$escapedkey.'([:\t ]+)(.*)$/m', $escapedkey.'$1'.$value, $text);
         }
         
         // check if the username was changed
@@ -156,33 +186,18 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
             resolve_pageid($ns,$newid,$exists);
             
             // create new userprofile page
-            saveWikiText($newid, $text, "created by userprofile plugin"); 
+            saveWikiText($newid, $text, "userprofile plugin: profile page created"); 
             
             // delete old page
-            saveWikiText($id, "", "deleted by userprofile plugin (username changed to '".$changed['user']."')"); 
+            saveWikiText($id, "", "userprofile plugin: deleted (username changed to '".$changed['user']."')"); 
             
             // finish
             return;
         }
         
         // write the changes to the page
-        saveWikiText($id, $text, "modified by userprofile plugin"); 
+        saveWikiText($id, $text, "userprofile plugin: user modified"); 
         
-    }
-    
-     /**
-     * Appends an underscore to the key if the key's last character is a 's'
-     * 
-     * @param string $key   the datafield name
-     *
-     * @return string       the escaped key
-     */
-    private function _dataFieldEscapeMulti($key){
-        // if the last char of key is an 's' append an underscore
-        if(substr($key, -1) == 's') return $key .= "_";
-        
-        // else leave it as is
-        return $key;
     }
 }
 

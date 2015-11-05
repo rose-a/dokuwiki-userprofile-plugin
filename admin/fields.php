@@ -67,10 +67,6 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
         if(!$sqlite) return;
 
         $sqlite->query("BEGIN TRANSACTION");
-        if (!$sqlite->query("DELETE FROM fields")) {
-            $sqlite->query('ROLLBACK TRANSACTION');
-            return;
-        }
         foreach($_REQUEST['up'] as $row){
             $row = array_map('trim',$row);
             $row['name'] = utf8_strtolower($row['name']);
@@ -81,14 +77,16 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $arr = preg_split('/\s*\|\s*/', $row['defaultval']);
             $arr = array_unique($arr);
             $row['defaultval'] = implode(' | ', $arr);
-
-            $res = $sqlite->query("SELECT [fid] FROM fields WHERE [name] = ?", $field);
-            $fid = $sqlite->res2row($res)[0];
             
-            if($fid)
-                $res = $sqlite->query("UPDATE fields SET [title] = ?, [defaultval] = ? WHERE [vid] = ?", array($value, $vid));
+            if($row['fid'])
+                $res = $sqlite->query("UPDATE fields SET [name] = ?, [title] = ?, [defaultval] = ? WHERE [fid] = ?", array($row['name'], $row['title'], $row['defaultval'], $row['fid']));
             else
-                $res = $sqlite->query("INSERT INTO fields ([name], [title], [defaultval]) VALUES (?,?,?)",$row));
+                $res = $sqlite->query("INSERT INTO fields ([name], [title], [defaultval]) VALUES (?,?,?)", array($row['name'], $row['title'], $row['defaultval']));
+                
+            if(!$res){
+                $sqlite->query('ROLLBACK TRANSACTION');
+                return;
+            }
         }
         $sqlite->query("COMMIT TRANSACTION");
     }
@@ -125,6 +123,7 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $form->addElement('<tr>');
 
             $form->addElement('<td>');
+            $form->addHidden('up['.$cur.'][fid]',$row['fid']);
             $form->addElement(form_makeTextField('up['.$cur.'][name]',$row['name'],''));
             $form->addElement('</td>');
             

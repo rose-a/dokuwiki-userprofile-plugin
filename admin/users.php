@@ -50,7 +50,7 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
      * @return int
      */
     public function getMenuSort() {
-        return 500;
+        return 400;
     }
 
     public function getMenuText() {

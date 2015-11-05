@@ -34,7 +34,7 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
      * @return int
      */
     public function getMenuSort() {
-        return 501;
+        return 401;
     }
 
     /**

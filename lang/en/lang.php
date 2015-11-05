@@ -7,6 +7,7 @@
 
 // menu entry for admin plugins
 $lang['menu'] = 'Userprofile Custom fields';
+$lang['menu_users'] = 'Userprofiles';
 
 // custom language strings for the plugin
 $lang['name'] = 'Fieldname';

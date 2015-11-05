@@ -12,7 +12,7 @@ if (!defined('DOKU_INC')) die();
 /**
  * Administration form for configuring the additional profile fields
  */
-class admin_plugin_userprofile extends DokuWiki_Admin_Plugin {
+class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
     /**
      * will hold the userprofile helper plugin
      * @var helper_plugin_userprofile

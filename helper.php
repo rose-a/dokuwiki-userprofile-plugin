@@ -60,13 +60,19 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         $res = $sqlite->query("SELECT [vid] FROM fieldvals WHERE [fid] = ? AND [uid] = ?", array($fid, $uid));
         $vid = $sqlite->res2row($res)[0];
         
+        $sqlite->query("BEGIN TRANSACTION");
         if($vid)
             $res = $sqlite->query("UPDATE fieldvals SET [value] = ? WHERE [vid] = ?", array($value, $vid));
         else
             $res = $sqlite->query("INSERT INTO fieldvals ([fid], [uid], [value]) VALUES (?,?,?)", array($fid, $uid, $value));
             
-        if($res) return true;        
-        return false;
+        if(!$res){
+            $sqlite->query("ROLLBACK TRANSACTION");
+            return false;            
+        } 
+                
+        $sqlite->query("COMMIT TRANSACTION");
+        return true;
     }
     
     /**
@@ -85,14 +91,19 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
         $uid = $sqlite->res2row($res)[0];
         
+        $sqlite->query("BEGIN TRANSACTION");
         if($uid)
             $res = $sqlite->query("UPDATE users SET [name] = ?, [email] = ? WHERE [uid] = ?", array($name, $email, $uid));
         else
             $res = $sqlite->query("INSERT INTO users ([user], [name], [email]) VALUES (?,?,?)", array($user, $name, $email));
         
-        if($res) return true;
-        
-        return false;
+        if(!$res){
+            $sqlite->query("ROLLBACK TRANSACTION");
+            return false;            
+        } 
+                
+        $sqlite->query("COMMIT TRANSACTION");
+        return true;
     }
     
     /**

@@ -82,11 +82,13 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $arr = array_unique($arr);
             $row['defaultval'] = implode(' | ', $arr);
 
-            if (!$sqlite->query("INSERT INTO fields (name, title, defaultval)
-                                 VALUES (?,?,?)",$row)) {
-                $sqlite->query('ROLLBACK TRANSACTION');
-                return;
-            }
+            $res = $sqlite->query("SELECT [fid] FROM fields WHERE [name] = ?", $field);
+            $fid = $sqlite->res2row($res)[0];
+            
+            if($fid)
+                $res = $sqlite->query("UPDATE fields SET [title] = ?, [defaultval] = ? WHERE [vid] = ?", array($value, $vid));
+            else
+                $res = $sqlite->query("INSERT INTO fields ([name], [title], [defaultval]) VALUES (?,?,?)",$row));
         }
         $sqlite->query("COMMIT TRANSACTION");
     }

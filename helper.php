@@ -32,6 +32,57 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
     }
     
     /**
+     * Saves a custom profile fields value to the database
+     */
+    function saveField($user, $field, $value){        
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        // check if field is a legit field
+        $res = $sqlite->query("SELECT [fid] FROM fields WHERE [name] = ?", $field);
+        $fid = $sqlite->res2row($res)[0];
+        // If no field with the given name is found, return
+        if(!$fid) return false;
+        
+        // check if user exists in db
+        $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
+        $uid = $sqlite->res2row($res)[0];
+        
+        // If no user with the given name is found, return
+        if(!$uid) return false;
+        
+        // get id of the field entry for the current user
+        $res = $sqlite->query("SELECT [vid] FROM fieldvals WHERE [fid] = ? AND [uid] = ?", array($fid, $uid));
+        $vid = $sqlite->res2row($res)[0];
+        
+        if($vid)
+            $res = $sqlite->query("UPDATE fieldvals SET [value] = ? WHERE [vid] = ?", array($value, $vid));
+        else
+            $res = $sqlite->query("INSERT INTO fieldvals ([fid], [uid], [value]) VALUES (?,?,?)", array($fid, $uid, $value));
+            
+        if($res) return true;        
+        return false;
+    }
+    
+    function saveUser($user, $name, $email){
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        // check if user exists in db
+        $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
+        $uid = $sqlite->res2row($res)[0];
+        
+        if($uid)
+            $res = $sqlite->query("UPDATE users SET [name] = ?, [email] = ? WHERE [uid] = ?", array($name, $email, $uid));
+        else
+            $res = $sqlite->query("INSERT INTO users ([user], [name], [email]) VALUES (?,?,?)", array($user, $name, $email));
+        
+        if($res) return true;
+        
+        return false;
+    }
+    
+    /**
      * Creates a dataentry for the given array
      *
      * @param array $fields An array containing the keys and corresponding values for the dataentry

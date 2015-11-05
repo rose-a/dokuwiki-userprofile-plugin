@@ -33,6 +33,11 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
     
     /**
      * Saves a custom profile fields value to the database
+     * 
+     * @param string $user the concerned username
+     * @param string $field the name of the custom profile field
+     * @param string $value the value of the field
+     * @return bool 
      */
     function saveField($user, $field, $value){        
         $sqlite = $this->_getDB();
@@ -64,6 +69,14 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         return false;
     }
     
+    /**
+     * Saves a user to the database
+     *
+     * @param string $user the username
+     * @param string $name the users real name
+     * @param string $email the users email
+     * @return bool 
+     */
     function saveUser($user, $name, $email){
         $sqlite = $this->_getDB();
         if(!$sqlite) return false;
@@ -80,6 +93,36 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         if($res) return true;
         
         return false;
+    }
+    
+    /**
+     * Retrieves a users profile from the database
+     *
+     * @param string $user the username
+     * @return array|false the users profile if found in db 
+     */
+    function getProfile($user){
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        $res = $sqlite->query("SELECT [uid], [name], [email],  FROM users WHERE [user] = ?", $user);
+        $userdata = $sqlite->res2row($res)[0];
+        
+        if(!$userdata['uid']) return false;
+        $uid = $userdata['uid'];
+        unset($userdata['uid']);
+        
+        $sql = "SELECT f.[name] as field, val.value as value FROM fields f".
+               "JOIN fieldvals val ON f.[fid] = val.[fid].".
+               "WHERE val.[uid] = ?";
+        $res = $sqlite->query($sql, $uid);
+        $fields = $sqlite->res2arr($res);
+        
+        foreach($fields as $current){
+            $userdata[$current['field']] = $current['value'];
+        }       
+        
+        return $userdata;       
     }
     
     /**

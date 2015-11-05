@@ -21,7 +21,6 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      * Constructor. Load helper plugin
      */
     public function __construct(){
-        
         $this->hlp = plugin_load('helper', 'userprofile');
     }
 
@@ -134,6 +133,7 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      * @return void
      */
     private function _modifyProfile($params, $modification_result) {
+        global $auth;
         // get config vars
         $ns = $this->getConf('namespace');
         //$template = $this->getConf('template');
@@ -147,7 +147,8 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         resolve_pageid($ns,$id,$exists);
         
         // get userdata
-        $userdata = getUserData($user, false);
+        $userdata = $auth->getUserData($user, false);
+        print_r($this->_auth);
         $noprofile = in_array('noprofile', $userdata['grps']);
         
         // if page does not exist, build a "create" param-array and call _createProfile()

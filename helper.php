@@ -45,20 +45,20 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         
         // check if field is a legit field
         $res = $sqlite->query("SELECT [fid] FROM fields WHERE [name] = ?", $field);
-        $fid = $sqlite->res2row($res)[0];
+        $fid = $sqlite->res2row($res)['fid'];
         // If no field with the given name is found, return
         if(!$fid) return false;
         
         // check if user exists in db
         $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
-        $uid = $sqlite->res2row($res)[0];
+        $uid = $sqlite->res2row($res)['uid'];
         
         // If no user with the given name is found, return
         if(!$uid) return false;
         
         // get id of the field entry for the current user
         $res = $sqlite->query("SELECT [vid] FROM fieldvals WHERE [fid] = ? AND [uid] = ?", array($fid, $uid));
-        $vid = $sqlite->res2row($res)[0];
+        $vid = $sqlite->res2row($res)['vid'];
         
         $sqlite->query("BEGIN TRANSACTION");
         if($vid)
@@ -89,7 +89,7 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         
         // check if user exists in db
         $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
-        $uid = $sqlite->res2row($res)[0];
+        $uid = $sqlite->res2row($res)['uid'];
         
         $sqlite->query("BEGIN TRANSACTION");
         if($uid)
@@ -117,14 +117,14 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         if(!$sqlite) return false;
         
         $res = $sqlite->query("SELECT [uid], [name], [email]  FROM users WHERE [user] = ?", $user);
-        $userdata = $sqlite->res2row($res)[0];
+        $userdata = $sqlite->res2row($res);
         
         if(!$userdata['uid']) return false;
         $uid = $userdata['uid'];
         unset($userdata['uid']);
         
-        $sql = "SELECT f.[name] as field, val.value as value FROM fields f".
-               "JOIN fieldvals val ON f.[fid] = val.[fid].".
+        $sql = "SELECT f.[name] as field, val.value as value FROM fields f ".
+               "JOIN fieldvals val ON f.[fid] = val.[fid] ".
                "WHERE val.[uid] = ?";
         $res = $sqlite->query($sql, $uid);
         $fields = $sqlite->res2arr($res);

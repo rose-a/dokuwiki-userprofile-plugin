@@ -116,7 +116,7 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         $sqlite = $this->_getDB();
         if(!$sqlite) return false;
         
-        $res = $sqlite->query("SELECT [uid], [name], [email],  FROM users WHERE [user] = ?", $user);
+        $res = $sqlite->query("SELECT [uid], [name], [email]  FROM users WHERE [user] = ?", $user);
         $userdata = $sqlite->res2row($res)[0];
         
         if(!$userdata['uid']) return false;

@@ -83,20 +83,15 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
     public function handle() {
         if(!is_array($_REQUEST['up']) || !checkSecurityToken()) return;
         
-        // get config vars
-        $ns = $this->getConf('namespace');
-        $id = $_REQUEST['up']['user'];
+        $userdata = $_REQUEST['up']['user'];
         
-        $dataentry = $this->hlp->createDataentry($_REQUEST['up']['data']);
+        // First save the user so it can be created if it doesn't already exist
+        if(!$this->hlp->saveUser($userdata['user'], $userdata['name'], $userdata['email'])) return;
         
-        // check if page exists
-        resolve_pageid($ns,$id,$exists);
-                
-        if($exists) $summary = "userprofile plugin: profile data modified";
-        else $summary = "userprofile plugin: created profile page";
-                
-        // write the changes to the page
-        saveWikiText($id, $dataentry, $summary); 
+        // Then save the profile fields
+        foreach($_REQUEST['up']['data'] as $field => $value){
+            $this->hlp->saveField($userdata['user'], $field, $value);
+        }
     }
     
     /**
@@ -167,19 +162,15 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
         
         // Edit table
         if($cmd == "edit") {
-            // get config vars
-            $ns = $this->getConf('namespace');
+            
             $user = $param;
-            $userpage_id = $user;
-            // check if page exists
-            resolve_pageid($ns,$userpage_id,$exists);
-            // get current raw text user page
-            $rawtext = rawWiki($userpage_id);
+            
+            $profile = $this->hlp->getProfile($user);
             
             // create hidden fields
-            $form->addHidden('up[user]',$user);
-            $form->addHidden('up[data][name]',$user_list[$user]['name']);
-            $form->addHidden('up[data][email]',$user_list[$user]['mail']);
+            $form->addHidden('up[user][user]',$user);
+            $form->addHidden('up[user][name]',$user_list[$user]['name']);
+            $form->addHidden('up[user][email]',$user_list[$user]['mail']);
                         
             $sql = "SELECT * FROM fields";
             $res = $sqlite->query($sql);
@@ -205,13 +196,6 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
                 $form->addElement('<td>'.hsc($field['title']).'</td>');
                 $form->addElement('<td>');
                 
-                // read current value from profile page
-                $escapedkey = $this->hlp->_dataFieldEscapeMulti($field['name']);
-                if(preg_match('/^'.$escapedkey.'([:\t ]+)(.*)$/m', $rawtext, $matches)) {
-                    $current = $matches[2];
-                }
-                else $current = '';        
-                
                 $defaults_array = explode('|', $field['defaultval']);
                 if(count($defaults_array) > 1) {
                     // create select field
@@ -219,12 +203,12 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
                     $form->addElement(form_makeMenuField(
                                     'up[data]['.$field['name'].']',
                                     $defaults_array,
-                                    $current,''
+                                    $profile[$field['name']],''
                     ));
                 }
                 else {
                     // create regular text field
-                    $form->addElement(form_makeTextField('up[data]['.$field['name'].']',$current,''));
+                    $form->addElement(form_makeTextField('up[data]['.$field['name'].']',$profile[$field['name']],''));
                 }
                             
                 $form->addElement('</td>');

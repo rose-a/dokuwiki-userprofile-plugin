@@ -30,6 +30,27 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
         
         return $rows;
     }
+    
+    /**
+     * Creates a dataentry for the given array
+     *
+     * @param array $fields An array containing the keys and corresponding values for the dataentry
+     * @return string|false the dataentry string or false
+     */
+    function createDataentry($fields) {
+        // open dataentry block
+        $text = "---- dataentry userprofile ----".PHP_EOL;
+        
+        // add a row for each field member
+        foreach($fields as $key => $value){
+            // add key : value line to text
+            $text.= $this->_dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
+        }
+        // close dataentry block
+        $text.= "----";
+        
+        return $text;
+    }
 	
 	/**
      * load the sqlite helper
@@ -49,6 +70,21 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
             }
         }
         return $this->db;
+    }
+    
+    /**
+     * Appends an underscore to the key if the key's last character is a 's'
+     * 
+     * @param string $key   the datafield name
+     *
+     * @return string       the escaped key
+     */
+    function _dataFieldEscapeMulti($key){
+        // if the last char of key is an 's' append an underscore
+        if(substr($key, -1) == 's') return $key .= "_";
+        
+        // else leave it as is
+        return $key;
     }
 	
 }

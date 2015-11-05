@@ -18,12 +18,28 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
      * @var helper_plugin_userprofile
      */
     protected $hlp = null;
+    protected $_auth = null;        // auth object
 
    /**
      * Constructor. Load helper plugin
      */
     public function __construct(){
+        // Copied from usermanager plugin
+        /** @var DokuWiki_Auth_Plugin $auth */
+        global $auth;
+
+        $this->setupLocale();
+
+        if (!isset($auth)) {
+            $this->_disabled = $this->lang['noauth'];
+        } else if (!$auth->canDo('getUsers')) {
+            $this->_disabled = $this->lang['nosupport'];
+        } else {
+            // we're good to go
+            $this->_auth = & $auth;
+        }
         
+        // Get helper
         $this->hlp = plugin_load('helper', 'userprofile');
     }
 
@@ -65,19 +81,167 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
      * Carry out required processing
      */
     public function handle() {
-        // :TODO: add functionality
+        if(!is_array($_REQUEST['up']) || !checkSecurityToken()) return;
+        
+        // get config vars
+        $ns = $this->getConf('namespace');
+        $id = $_REQUEST['up']['user'];
+        
+        $dataentry = $this->hlp->createDataentry($_REQUEST['up']['data']);
+        
+        // check if page exists
+        resolve_pageid($ns,$id,$exists);
+                
+        if($exists) $summary = "userprofile plugin: profile data modified";
+        else $summary = "userprofile plugin: created profile page";
+                
+        // write the changes to the page
+        saveWikiText($id, $dataentry, $summary); 
     }
     
     /**
      * Output html of the admin page
      */
     public function html() {
+        global $ID;
+        global $INPUT;
+        
+        if(is_null($this->_auth)) {
+            print $this->lang['badauth'];
+            return false;
+        }
+        
         $sqlite = $this->hlp->_getDB();
         if(!$sqlite) return;
+        
+        $fn = $INPUT->param('fn');
+        if (is_array($fn)) {
+            $cmd = key($fn);
+            $param = is_array($fn[$cmd]) ? key($fn[$cmd]) : null;
+        } else {
+            $cmd = $fn;
+            $param = null;
+        }
+        
+        $user_list = $this->_auth->retrieveUsers($this->_start, $this->_pagesize, $this->_filter);
 
+        
         echo $this->locale_xhtml('admin_intro');
-
-        // Nothing happens here yet 
+        
+        $form = new Doku_Form(array('method'=>'post'));
+        $form->addHidden('page','userprofile_users');
+        
+        // List registered users
+        $form->addElement(
+            '<table>'.
+            '<tr>'.
+            '<th>'.$this->getLang('username').'</th>'.
+            '<th>'.$this->getLang('realname').'</th>'.
+            '<th>'.$this->getLang('email').'</th>'.
+            '</tr>'
+        );
+        
+        foreach ($user_list as $user => $userinfo) {
+            extract($userinfo);
+                /**
+                 * @var string $name
+                 * @var string $pass
+                 * @var string $mail
+                 * @var array  $grps
+                 */
+            if(!in_array('noprofile', $grps)) {
+                $form->addElement(
+                    '<tr>'.
+                    '<td><a href="'.wl($ID,array('fn[edit]['.$user.']' => 1,
+                                                                'do' => 'admin',
+                                                                'page' => 'userprofile_users',
+                                                                'sectok' => getSecurityToken())).
+                                '" title="'.$this->lang['edit_prompt'].'">'.hsc($user).'</a></td>'.
+                    '<td>'.hsc($name).'</td>'.
+                    '<td>'.hsc($mail).'</td>'.
+                    '</tr>'
+                );
+            }
+        }
+        $form->addElement('</table>');
+        
+        // Edit table
+        if($cmd == "edit") {
+            // get config vars
+            $ns = $this->getConf('namespace');
+            $user = $param;
+            $userpage_id = $user;
+            // check if page exists
+            resolve_pageid($ns,$userpage_id,$exists);
+            // get current raw text user page
+            $rawtext = rawWiki($userpage_id);
+            
+            // create hidden fields
+            $form->addHidden('up[user]',$user);
+            $form->addHidden('up[data][name]',$user_list[$user]['name']);
+            $form->addHidden('up[data][email]',$user_list[$user]['mail']);
+                        
+            $sql = "SELECT * FROM fields";
+            $res = $sqlite->query($sql);
+            $fields = $sqlite->res2arr($res);
+            
+            $form->addElement(
+                '<table>'.
+                '<tr>'.
+                '<th colspan="2">'.$this->getLang('th_edit').'</th>'.
+                '</tr>'.
+                '<tr>'.
+                '<td>'.$this->getLang('realname').'</td>'.
+                '<td>'.hsc($user_list[$user]['name']).'</td>'.
+                '</tr>'.
+                '<tr>'.
+                '<td>'.$this->getLang('email').'</td>'.
+                '<td>'.hsc($user_list[$user]['mail']).'</td>'.
+                '</tr>'
+            );
+            foreach($fields as $field){
+                $form->addElement('<tr>');
+    
+                $form->addElement('<td>'.hsc($field['title']).'</td>');
+                $form->addElement('<td>');
+                
+                // read current value from profile page
+                $escapedkey = $this->hlp->_dataFieldEscapeMulti($field['name']);
+                if(preg_match('/^'.$escapedkey.'([:\t ]+)(.*)$/m', $rawtext, $matches)) {
+                    $current = $matches[2];
+                }
+                else $current = '';        
+                
+                $defaults_array = explode('|', $field['defaultval']);
+                if(count($defaults_array) > 1) {
+                    // create select field
+                    $defaults_array = array_map('trim',$defaults_array);
+                    $form->addElement(form_makeMenuField(
+                                    'up[data]['.$field['name'].']',
+                                    $defaults_array,
+                                    $current,''
+                    ));
+                }
+                else {
+                    // create regular text field
+                    $form->addElement(form_makeTextField('up[data]['.$field['name'].']',$current,''));
+                }
+                            
+                $form->addElement('</td>');
+                
+                $form->addElement('</tr>');
+            }
+            
+            $form->addElement(
+                '<tr>'.
+                '<td colspan="2">'               
+            );
+            $form->addElement(form_makeButton('submit','admin',$this->getLang('submit')));        
+            $form->addElement('</td>');
+            $form->addElement('</table>');
+        }
+        
+        $form->printForm();
     }
 }
 

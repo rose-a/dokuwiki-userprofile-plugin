@@ -78,9 +78,9 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             if(!$row['name']) continue;
 
             // Clean default
-            $arr = preg_split('/\s*,\s*/', $row['defaultval']);
+            $arr = preg_split('/\s*\|\s*/', $row['defaultval']);
             $arr = array_unique($arr);
-            $row['defaultval'] = implode(', ', $arr);
+            $row['defaultval'] = implode(' | ', $arr);
 
             if (!$sqlite->query("INSERT INTO fields (name, title, defaultval)
                                  VALUES (?,?,?)",$row)) {
@@ -105,7 +105,7 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
         $rows = $sqlite->res2arr($res);
 
         $form = new Doku_Form(array('method'=>'post'));
-        $form->addHidden('page','userprofile');
+        $form->addHidden('page','userprofile_fields');
         $form->addElement(
             '<table class="inline">'.
             '<tr>'.

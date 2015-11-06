@@ -67,10 +67,6 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
         if(!$sqlite) return;
 
         $sqlite->query("BEGIN TRANSACTION");
-        if (!$sqlite->query("DELETE FROM fields")) {
-            $sqlite->query('ROLLBACK TRANSACTION');
-            return;
-        }
         foreach($_REQUEST['up'] as $row){
             $row = array_map('trim',$row);
             $row['name'] = utf8_strtolower($row['name']);
@@ -81,9 +77,27 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $arr = preg_split('/\s*\|\s*/', $row['defaultval']);
             $arr = array_unique($arr);
             $row['defaultval'] = implode(' | ', $arr);
-
-            if (!$sqlite->query("INSERT INTO fields (name, title, defaultval)
-                                 VALUES (?,?,?)",$row)) {
+            
+            if($row['fid']) {
+                // Check if field should be deleted
+                if(empty($row['name'])){
+                    // delete all fieldvals for the current field
+                    if(!$sqlite->query("DELETE FROM fieldvals WHERE [fid] = ?", $row['fid'])){
+                        $sqlite->query("ROLLBACK TRANSACTION");
+                        return false;
+                    } 
+                    
+                    // delete the field
+                    $res = $sqlite->query("DELETE FROM fields WHERE [fid] = ?", $row['fid']);
+                } 
+                else {
+                    $res = $sqlite->query("UPDATE fields SET [name] = ?, [title] = ?, [defaultval] = ? WHERE [fid] = ?", array($row['name'], $row['title'], $row['defaultval'], $row['fid']));
+                }
+            }
+            else
+                $res = $sqlite->query("INSERT INTO fields ([name], [title], [defaultval]) VALUES (?,?,?)", array($row['name'], $row['title'], $row['defaultval']));
+                
+            if(!$res){
                 $sqlite->query('ROLLBACK TRANSACTION');
                 return;
             }
@@ -123,6 +137,7 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $form->addElement('<tr>');
 
             $form->addElement('<td>');
+            $form->addHidden('up['.$cur.'][fid]',$row['fid']);
             $form->addElement(form_makeTextField('up['.$cur.'][name]',$row['name'],''));
             $form->addElement('</td>');
             

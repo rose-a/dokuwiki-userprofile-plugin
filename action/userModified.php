@@ -72,32 +72,8 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
         // return if user belongs to group 'noprofile' 
         if(in_array('noprofile', $params[4])) return;
         
-        // get config vars
-        $ns = $this->getConf('namespace');
-        //$template = $this->getConf('template');
-        
-        // extract event params
-        $user = $params[0];
-        $fields = array('name'     => $params[2],
-                         'email'    => $params[3]);
-        
-        // compose id for new user profile page        
-        $id = $user;
-        resolve_pageid($ns,$id,$exists);
-        
-        // open dataentry block
-        $text = "---- dataentry userprofile ----".PHP_EOL;
-        
-        // add a row for each field member
-        foreach($fields as $key => $value){
-            // add key : value line to text
-            $text.= $this->hlp->_dataFieldEscapeMulti($key)." : ".$value.PHP_EOL;
-        }
-        // close dataentry block
-        $text.= "----";
-        
-        // create userprofile page
-        saveWikiText($id, $text, "userprofile plugin: profile page created"); 
+        // save user        
+        $this->hlp->saveUser($params[0], $params[2], $params[3]);
     }
     
     /**
@@ -107,21 +83,12 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      *
      * @return void
      */
-    private function _deleteProfile($params) {
-        // get config vars
-        $ns = $this->getConf('namespace');
-        //$template = $this->getConf('template');
-        
+    private function _deleteProfile($params) {        
         // extract event params
         $user = $params[0][0];
-        $id = $user;
         
-        // check if page exists
-        resolve_pageid($ns,$id,$exists);
-        
-        // if page exists, delete it by writing an empty string to $text
-        if($exists)
-            saveWikiText($id, "", "userprofile plugin: deleted (user deleted)"); 
+        // delete user
+        $this->hlp->deleteUser($user);
     }
     
     /**
@@ -134,70 +101,31 @@ class action_plugin_userprofile_userModified extends DokuWiki_Action_Plugin {
      */
     private function _modifyProfile($params, $modification_result) {
         global $auth;
-        // get config vars
-        $ns = $this->getConf('namespace');
-        //$template = $this->getConf('template');
-        
+                
         // extract event params
         $user = $params[0];
-        $id = $user;
         $changed = $params[1];
+        $olduser = null;
         
-        // check if page exists
-        resolve_pageid($ns,$id,$exists);
+                // check if the username was changed
+        if(!empty($changed['user']) && $user != $changed['user']){
+            $olduser = $user;
+            $user = $changed['user'];
+        }
         
         // get userdata
         $userdata = $auth->getUserData($user, false);
-        print_r($this->_auth);
-        $noprofile = in_array('noprofile', $userdata['grps']);
-        
-        // if page does not exist, build a "create" param-array and call _createProfile()
-        if(!$exists){
-            if(!$noprofile){
-                $createparams[0] = $user;
-                $createparams[2] = $userdata['name'];
-                $createparams[3] = $userdata['mail'];
-                $this->_createProfile($createparams);
-            }
-            return;
-        } 
-        
-        // else check modification_result
-        if(!$modification_result) return;
+        $noprofile = in_array('noprofile', $userdata['grps']);        
         
         // check noprofile group
         if($noprofile){
-            saveWikiText($id, "", "userprofile plugin: deleted (user added to 'noprofile' group)"); 
+            // delete user
+            $this->hlp->deleteUser($user);
             return;
         }
         
-        // get current raw text from page
-        $text = rawWiki($id);
-        foreach($changed as $key => $value){
-            $escapedkey = $this->hlp->_dataFieldEscapeMulti($key);
-            // replace value
-            $text = preg_replace('/^'.$escapedkey.'([:\t ]+)(.*)$/m', $escapedkey.'$1'.$value, $text);
-        }
-        
-        // check if the username was changed
-        if(!empty($changed['user']) && $user != $changed['user']){
-            // resolve new user id
-            $newid = $changed['user'];
-            resolve_pageid($ns,$newid,$exists);
-            
-            // create new userprofile page
-            saveWikiText($newid, $text, "userprofile plugin: profile page created"); 
-            
-            // delete old page
-            saveWikiText($id, "", "userprofile plugin: deleted (username changed to '".$changed['user']."')"); 
-            
-            // finish
-            return;
-        }
-        
-        // write the changes to the page
-        saveWikiText($id, $text, "userprofile plugin: user modified"); 
-        
+        // save user 
+        $uid = $this->hlp->saveUser($user, $userdata['name'], $userdata['mail'], $olduser);
     }
 }
 

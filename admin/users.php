@@ -85,8 +85,8 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
         
         $userdata = $_REQUEST['up']['user'];
         
-        // First save the user so it can be created if it doesn't already exist
-        if(!$this->hlp->saveUser($userdata['user'], $userdata['name'], $userdata['email'])) return;
+        // First save the user so it can be created if it doesn't already exist (bullshit, user has to be existing)
+        //if(!$this->hlp->saveUser($userdata['user'], $userdata['name'], $userdata['email'])) return;
         
         // Then save the profile fields
         foreach($_REQUEST['up']['data'] as $field => $value){

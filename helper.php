@@ -81,19 +81,22 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
      * @param string $user the username
      * @param string $name the users real name
      * @param string $email the users email
-     * @return bool 
+     * @param string [$olduser] the users old username
+     * @return int|false the uid if the user was successfully saved, otherwise false 
      */
-    function saveUser($user, $name, $email){
+    function saveUser($user, $name, $email, $olduser = ""){
         $sqlite = $this->_getDB();
         if(!$sqlite) return false;
         
+        if(empty($olduser)) $olduser = $user;
+        
         // check if user exists in db
-        $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $user);
+        $res = $sqlite->query("SELECT [uid] FROM users WHERE [user] = ?", $olduser);
         $uid = $sqlite->res2row($res)['uid'];
         
         $sqlite->query("BEGIN TRANSACTION");
         if($uid)
-            $res = $sqlite->query("UPDATE users SET [name] = ?, [email] = ? WHERE [uid] = ?", array($name, $email, $uid));
+            $res = $sqlite->query("UPDATE users SET [user] = ?, [name] = ?, [email] = ? WHERE [uid] = ?", array($user, $name, $email, $uid));
         else
             $res = $sqlite->query("INSERT INTO users ([user], [name], [email]) VALUES (?,?,?)", array($user, $name, $email));
         
@@ -101,6 +104,33 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
             $sqlite->query("ROLLBACK TRANSACTION");
             return false;            
         } 
+                
+        $sqlite->query("COMMIT TRANSACTION");
+        return true;
+    }
+    
+    /**
+     * Removes a user from the database
+     *
+     * @param string $user the username
+     * @return bool 
+     */
+    function deleteUser($user){
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        $sqlite->query("BEGIN TRANSACTION");
+        // delete all fieldvals for the user
+        if(!$sqlite->query("DELETE FROM fieldvals WHERE [uid] = (SELECT [uid] FROM users WHERE [user] = ?)", $user)){
+            $sqlite->query("ROLLBACK TRANSACTION");
+            return false;
+        } 
+        
+        // delete the user
+        if(!$sqlite->query("DELETE FROM users WHERE [user] = ?", $user)){
+            $sqlite->query("ROLLBACK TRANSACTION");
+            return false;
+        }
                 
         $sqlite->query("COMMIT TRANSACTION");
         return true;

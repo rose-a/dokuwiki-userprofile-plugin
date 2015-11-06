@@ -90,7 +90,7 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
         
         // Then save the profile fields
         foreach($_REQUEST['up']['data'] as $field => $value){
-            print_r($this->hlp->saveField($userdata['user'], $field, $value));
+            $this->hlp->saveField($userdata['user'], $field, $value);
         }
     }
     
@@ -166,7 +166,6 @@ class admin_plugin_userprofile_users extends DokuWiki_Admin_Plugin {
             $user = $param;
             
             $profile = $this->hlp->getProfile($user);
-            print_r($profile);
             
             // create hidden fields
             $form->addHidden('up[user][user]',$user);

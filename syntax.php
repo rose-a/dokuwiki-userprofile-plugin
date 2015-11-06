@@ -115,24 +115,27 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
         $sqlite = $this->hlp->_getDB();
         if(!$sqlite) return;
         
-		// further parsing of the query string		
-		parse_str($parsed['query'], $filters);
-		$fragment = $parsed['fragment'];
+		// further parsing of the query string
+		parse_str($parsedMatch['query'], $filters);
+		$fragment = $parsedMatch['fragment'];
 		
         // Get the users for which a row should be displayed
-		if(count($filters>0)) {
+		if(count($filters)>0) {
             $cnt = 0;
-            $sql = "SELECT [uid] FROM fieldvals WHERE";
+            $sql = "SELECT val.[uid] FROM fieldvals val JOIN fields f ON f.[fid] = val.[fid] WHERE";
 			foreach($filters as $field => $value){
-                if($cnt>0) $sql .= " AND";
-                $sql .= "[".$field."] = ?";
+                if($cnt>0) $sql .= " OR";
+                $sql .= " (f.[name] = '".hsc($field)."' AND val.[value] = ?)";
                 $params[] = $value;
                 $cnt++;
             }
 			$sql .= " GROUP BY [uid]";
             
             $res = $sqlite->query($sql, $params);
-            $uids = $sqlite->res2arr($res);            
+            $uid_array = $sqlite->res2arr($res);
+            foreach($uid_array as $current){
+                $uids[] = $current['uid'];
+            }            
             $res = $sqlite->query("SELECT [user] FROM [users] WHERE [uid] IN (".implode(", ", $uids).") ORDER BY [name]");
 		}
         else {
@@ -147,9 +150,10 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
         
         // get field headers
         $res = $sqlite->query("SELECT [title] FROM [fields]");
-        $headers = $sqlite->res2arr($res);
+        $headers = $sqlite->res2arr($res);     
+        array_unshift($headers, array('title' => $this->getLang('realname')), array('title' => $this->getLang('email')));
         
-        return array('type' => 'table', 'input' => $parsedMatch, 'rows' => $profiles, 'headers' => $headers);
+        return array('type' => 'table', 'input' => $parsedMatch, 'rows' => $profiles, 'headers' => array_values($headers));
 	}
     
     
@@ -170,30 +174,36 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
             switch($data['type']) {
                 case 'table':
                     // render table header
-                    $renderer->doc .= '<table class="userprofile">'.
-                                      '<tr>';
+                    $cnt_row = 0;                    
+                    $renderer->doc .= '<table class="inline userprofile">'.PHP_EOL.
+                                      '<thead><tr class="row'.$cnt_row.'">'.PHP_EOL;                                      
+                    $cnt_col = 0;
                     foreach($data['headers'] as $header) {
-                        $renderer->doc .= '<th>'.hsc($header).'</th>';
+                        $renderer->doc .= '<th class="row'.$cnt_col.'">'.hsc($header['title']).'</th>'.PHP_EOL;
+                        $cnt_col++;
                     }
-                    $renderer->doc .= '</tr>';
-                    
+                    $renderer->doc .= '</thead></tr>'.PHP_EOL;
+                    $cnt_row++;
                     // render content
                     if(!empty($data['rows'])){
                         foreach($data['rows'] as $row){
-                            $renderer->doc .= '<tr>';
+                            $renderer->doc .= '<tr class="row'.$cnt_row.'">'.PHP_EOL;
+                            $cnt_col = 0;
                             foreach($row as $col) {
-                                $renderer->doc .= '<th>'.hsc($col).'</th>';
+                                $renderer->doc .= '<td class="row'.$cnt_col.'">'.hsc($col).'</td>'.PHP_EOL;
+                                $cnt_col++;
                             }
-                            $renderer->doc .= '</tr>';
+                            $renderer->doc .= '</tr>'.PHP_EOL;
+                            $cnt_row++;
                         }
                     }
                     else {
                         // If no content is in rows, render "Nothing found" placeholder
-                        $renderer->doc .= '<tr><td clospan="'.count($data['headers']).'">Nothing found</tr>';
+                        $renderer->doc .= '<tr><td colspan="'.count($data['headers']).'"><center>Nothing found</center></tr>'.PHP_EOL;
                     }
                     
                     // close table and return
-                    $renderer->doc .= '</table>';
+                    $renderer->doc .= '</table>'.PHP_EOL.PHP_EOL;
                     return true;
             }
             

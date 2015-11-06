@@ -78,8 +78,22 @@ class admin_plugin_userprofile_fields extends DokuWiki_Admin_Plugin {
             $arr = array_unique($arr);
             $row['defaultval'] = implode(' | ', $arr);
             
-            if($row['fid'])
-                $res = $sqlite->query("UPDATE fields SET [name] = ?, [title] = ?, [defaultval] = ? WHERE [fid] = ?", array($row['name'], $row['title'], $row['defaultval'], $row['fid']));
+            if($row['fid']) {
+                // Check if field should be deleted
+                if(empty($row['name'])){
+                    // delete all fieldvals for the current field
+                    if(!$sqlite->query("DELETE FROM fieldvals WHERE [fid] = ?", $row['fid'])){
+                        $sqlite->query("ROLLBACK TRANSACTION");
+                        return false;
+                    } 
+                    
+                    // delete the field
+                    $res = $sqlite->query("DELETE FROM fields WHERE [fid] = ?", $row['fid']);
+                } 
+                else {
+                    $res = $sqlite->query("UPDATE fields SET [name] = ?, [title] = ?, [defaultval] = ? WHERE [fid] = ?", array($row['name'], $row['title'], $row['defaultval'], $row['fid']));
+                }
+            }
             else
                 $res = $sqlite->query("INSERT INTO fields ([name], [title], [defaultval]) VALUES (?,?,?)", array($row['name'], $row['title'], $row['defaultval']));
                 

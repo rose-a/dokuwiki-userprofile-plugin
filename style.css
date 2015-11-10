@@ -16,15 +16,27 @@ table.userprofile.cards td.card.even {
 
 table.userprofile.card {
 	width: 100%;
+	margin-bottom: 1em;
 }
-table.userprofile.card td{
-	white-space: nowrap;
+table.userprofile.card td.profile{
 	border: none;
-	padding: 0.1em 0.5em;
+	padding-left: 0;
+	padding-right: 0;
 }
-table.userprofile.card td.col0{
+table.userprofile.profile {
+	width: 100%;
+	border: none;
+	margin: 0;
+}
+table.userprofile.profile td{
+	border: none;
+	padding-top: 0.1em;
+	padding-bottom: 0.1em;
+}
+table.userprofile.profile td.title{
 	white-space: nowrap;
+	font-weight: bold;
 }
-table.userprofile.card td.col1{
+table.userprofile.profile td.value{
 	width: 99%;
 }

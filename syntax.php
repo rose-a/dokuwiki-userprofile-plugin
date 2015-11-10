@@ -280,22 +280,28 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                                               '  <table class="userprofile card">'.PHP_EOL.
                                               '    <thead><tr class="row0">'.PHP_EOL.
                                               '      <th colspan="2">'.$card['name'].'</th>'.PHP_EOL.
-                                              '    </tr></thead>'.PHP_EOL;
-                            $renderer->doc .= '<tr class="row1">'.PHP_EOL.
-                                              '  <td class="col0">'.$this->getLang('email').':</td>'.PHP_EOL.
-                                              '  <td class="col1">'.$this->email($card['email']).'</td>'.PHP_EOL.
-                                              '</tr>'.PHP_EOL;
+                                              '    </tr></thead>'.PHP_EOL.
+                                              '    <tr>'.PHP_EOL.
+                                              '      <td class="profile">'.PHP_EOL.
+                                              '        <table class="userprofile profile">'.PHP_EOL;
+                            $renderer->doc .= '          <tr class="row1">'.PHP_EOL.
+                                              '            <td class="title">'.$this->getLang('email').':</td>'.PHP_EOL.
+                                              '            <td class="value">'.$this->email($card['email']).'</td>'.PHP_EOL.
+                                              '          </tr>'.PHP_EOL;
                             $cnt_row = 2;
                             foreach($card['profile'] as $element) {
                                 if(!empty($element['value'])){
                                     $renderer->doc .= '<tr class="row'.$cnt_row.'">'.PHP_EOL.
-                                                      '  <td class="col0">'.$element['title'].':</td>'.PHP_EOL.
-                                                      '  <td class="col1">'.$element['value'].'</td>'.PHP_EOL.
+                                                      '  <td class="title">'.$element['title'].':</td>'.PHP_EOL.
+                                                      '  <td class="value">'.$element['value'].'</td>'.PHP_EOL.
                                                       '</tr>'.PHP_EOL;
                                     $cnt_row++;                  
                                 }
                             }
-                            $renderer->doc .= '</table></td>'.PHP_EOL;
+                            $renderer->doc .= '        </table>'.PHP_EOL.
+                                              '      </td>'.PHP_EOL.
+                                              '    </tr>'.PHP_EOL.
+                                              '  </table>'.PHP_EOL;
                             if(!($cnt % 2)){
                                 // End row
                                 $renderer->doc .= '</tr>'.PHP_EOL;

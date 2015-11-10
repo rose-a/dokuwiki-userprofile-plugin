@@ -269,15 +269,14 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                 case 'cards':                    
                     if(!empty($data['cards'])){
                         $renderer->doc .= '<table class="userprofile cards">'.PHP_EOL;
+                        $renderer->doc .= '<tr>'.PHP_EOL;
+                        $renderer->doc .= '<td class="col odd">'.PHP_EOL;
                         $cnt = 1;
+                        $half = count($data['cards'])/2;
+                        $col = 1;
+                        
                         foreach($data['cards'] as $card){ 
-                            if($cnt % 2){
-                                // Begin new row
-                                $renderer->doc .= '<tr>'.PHP_EOL;
-                            }   
-                            $odd_even = ($cnt % 2) ? ('odd') : ('even');
-                            $renderer->doc .= '<td class="card '.$odd_even.'">'.PHP_EOL.
-                                              '  <table class="userprofile card">'.PHP_EOL.
+                            $renderer->doc .= '  <table class="userprofile card">'.PHP_EOL.
                                               '    <thead><tr class="row0">'.PHP_EOL.
                                               '      <th colspan="2">'.$card['name'].'</th>'.PHP_EOL.
                                               '    </tr></thead>'.PHP_EOL.
@@ -302,18 +301,15 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                                               '      </td>'.PHP_EOL.
                                               '    </tr>'.PHP_EOL.
                                               '  </table>'.PHP_EOL;
-                            if(!($cnt % 2)){
-                                // End row
-                                $renderer->doc .= '</tr>'.PHP_EOL;
+                            if($col == 1 && $cnt >= $half){
+                                // Switch to col 2
+                                $renderer->doc .= '</td><td class="col even">'.PHP_EOL;
+                                $col++;
                             }  
                             $cnt++;
                         }
-                        if(!($cnt % 2)){
-                            // End row
-                            $renderer->doc .= '<td class="card even"></td></tr>'.PHP_EOL;
-                        }
-                        
-                    $renderer->doc .= '</table>'.PHP_EOL;
+                        $renderer->doc .= '</td></tr>'.PHP_EOL;
+                        $renderer->doc .= '</table>'.PHP_EOL;
                     }
                     return true;
                 break;

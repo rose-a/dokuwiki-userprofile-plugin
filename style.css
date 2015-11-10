@@ -2,15 +2,15 @@ table.userprofile.cards {
 	width: 100%;
 	border: none;
 }
-table.userprofile.cards td.card {
+table.userprofile.cards td.col {
 	width: 50%;
 	padding-top: 0;
 	border: none;
 }
-table.userprofile.cards td.card.odd {
+table.userprofile.cards td.col.odd {
 	padding-left: 0;	
 }
-table.userprofile.cards td.card.even {
+table.userprofile.cards td.col.even {
 	padding-right: 0;	
 }
 

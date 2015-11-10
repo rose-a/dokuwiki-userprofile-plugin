@@ -93,16 +93,18 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
     * @static
     */
     function handle($match, $state, $pos, &$handler){
-		$match = substr($match, 15, -2); // strip {{userprofile> from start and }} from end
+		$match = substr($match, 14, -2); // strip {{userprofile> from start and }} from end
 		$parsed = parse_url($match);
 		$type = $parsed['path'];
 		
 		switch($type) {
             case 'cards':
 				return $this->_handleCards($parsed);
+                break;
 			case 'table':
 			default:
 				return $this->_handleTable($parsed);
+                break;
 		} 
 	}
 	
@@ -157,8 +159,13 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
         
         // get profiles
 		foreach ($users as $current){
-            $profiles[] = $this->hlp->getProfileComponents($current);
+            $profile = $this->hlp->getProfileComponents($current);
+            foreach($filters as $field => $value){
+                unset($profile['profile'][$field]);                   
+            }
+            $profiles[] = $profile;
         }
+        
               
         return array('type' => $type, 'input' => $parsedMatch, 'cards' => $profiles);
 	}
@@ -257,22 +264,53 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                     // close table and return
                     $renderer->doc .= '</table>'.PHP_EOL.PHP_EOL;
                     return true;
+                break;
                     
                 case 'cards':                    
                     if(!empty($data['cards'])){
-                        $renderer->doc .= '<div class="userprofile card">'.PHP_EOL;
-                        foreach($data['cards'] as $card){
-                            $renderer->doc .= '<h4>'.$card['name'].'</h4>'.PHP_EOL;
-                            $renderer->doc .= '<p><strong>'.$this->getLang('email').':</strong> '.$card['email'].'<br/>'.PHP_EOL;
+                        $renderer->doc .= '<table class="userprofile cards">'.PHP_EOL;
+                        $cnt = 1;
+                        foreach($data['cards'] as $card){ 
+                            if($cnt % 2){
+                                // Begin new row
+                                $renderer->doc .= '<tr>'.PHP_EOL;
+                            }   
+                            $odd_even = ($cnt % 2) ? ('odd') : ('even');
+                            $renderer->doc .= '<td class="card '.$odd_even.'">'.PHP_EOL.
+                                              '  <table class="userprofile card">'.PHP_EOL.
+                                              '    <thead><tr class="row0">'.PHP_EOL.
+                                              '      <th colspan="2">'.$card['name'].'</th>'.PHP_EOL.
+                                              '    </tr></thead>'.PHP_EOL;
+                            $renderer->doc .= '<tr class="row1">'.PHP_EOL.
+                                              '  <td class="col0">'.$this->getLang('email').':</td>'.PHP_EOL.
+                                              '  <td class="col1">'.$this->email($card['email']).'</td>'.PHP_EOL.
+                                              '</tr>'.PHP_EOL;
+                            $cnt_row = 2;
                             foreach($card['profile'] as $element) {
                                 if(!empty($element['value'])){
-                                    $renderer->doc .= '<p><strong>'.$element['title'].':</strong> '.$element['value'].'<br/>'.PHP_EOL;
+                                    $renderer->doc .= '<tr class="row'.$cnt_row.'">'.PHP_EOL.
+                                                      '  <td class="col0">'.$element['title'].':</td>'.PHP_EOL.
+                                                      '  <td class="col1">'.$element['value'].'</td>'.PHP_EOL.
+                                                      '</tr>'.PHP_EOL;
+                                    $cnt_row++;                  
                                 }
                             }
+                            $renderer->doc .= '</table></td>'.PHP_EOL;
+                            if(!($cnt % 2)){
+                                // End row
+                                $renderer->doc .= '</tr>'.PHP_EOL;
+                            }  
+                            $cnt++;
                         }
-                        $renderer->doc .= '</p></div>'.PHP_EOL;
+                        if(!($cnt % 2)){
+                            // End row
+                            $renderer->doc .= '<td class="card even"></td></tr>'.PHP_EOL;
+                        }
+                        
+                    $renderer->doc .= '</table>'.PHP_EOL;
                     }
                     return true;
+                break;
             }
             
         }

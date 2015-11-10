@@ -1,0 +1,30 @@
+table.userprofile.cards {
+	width: 100%;
+	border: none;
+}
+table.userprofile.cards td.card {
+	width: 50%;
+	padding-top: 0;
+	border: none;
+}
+table.userprofile.cards td.card.odd {
+	padding-left: 0;	
+}
+table.userprofile.cards td.card.even {
+	padding-right: 0;	
+}
+
+table.userprofile.card {
+	width: 100%;
+}
+table.userprofile.card td{
+	white-space: nowrap;
+	border: none;
+	padding: 0.1em 0.5em;
+}
+table.userprofile.card td.col0{
+	white-space: nowrap;
+}
+table.userprofile.card td.col1{
+	width: 99%;
+}

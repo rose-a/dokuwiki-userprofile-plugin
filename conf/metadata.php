@@ -6,6 +6,4 @@
  */
 
 
-$meta['namespace'] 	= 'users';
-$meta['template']	= 'users:template';
 

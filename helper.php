@@ -170,6 +170,37 @@ class helper_plugin_userprofile extends DokuWiki_Plugin {
     }
     
     /**
+     * Retrieves a users profile from the database
+     *
+     * @param string $user the username
+     * @return array|false the users profile if found in db 
+     */
+    function getProfileComponents($user){
+        $sqlite = $this->_getDB();
+        if(!$sqlite) return false;
+        
+        $res = $sqlite->query("SELECT [uid], [name], [email]  FROM users WHERE [user] = ?", $user);
+        $userdata = $sqlite->res2row($res);
+        
+        if(!$userdata['uid']) return false;
+        $uid = $userdata['uid'];
+        unset($userdata['uid']);
+        
+        $sql = "SELECT f.[name] as field, f.[title] as title, val.[value] as value FROM fields f ".
+               "JOIN fieldvals val ON f.[fid] = val.[fid] ".
+               "WHERE val.[uid] = ?";
+        $res = $sqlite->query($sql, $uid);
+        $fields = $sqlite->res2arr($res);
+        
+        foreach($fields as $current){
+            $profile[$current['field']] = array('title' => $current['title'],  'value' => $current['value']);
+        }       
+        $userdata['profile'] = $profile;
+        
+        return $userdata;       
+    }
+    
+    /**
      * Creates a dataentry for the given array
      *
      * @param array $fields An array containing the keys and corresponding values for the dataentry

@@ -98,6 +98,8 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
 		$type = $parsed['path'];
 		
 		switch($type) {
+            case 'cards':
+				return $this->_handleCards($parsed);
 			case 'table':
 			default:
 				return $this->_handleTable($parsed);
@@ -116,9 +118,62 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
         if(!$sqlite) return;
         
 		// further parsing of the query string
+		$type = $parsedMatch['path'];
 		parse_str($parsedMatch['query'], $filters);
 		$fragment = $parsedMatch['fragment'];
-		
+        
+        $users = $this->_filterUsers($filters);
+        
+        // get profiles
+		foreach ($users as $current){
+            $profiles[] = $this->hlp->getProfile($current);
+        }
+        
+        // get field headers
+        $res = $sqlite->query("SELECT [title] FROM [fields]");
+        $headers = $sqlite->res2arr($res);     
+        array_unshift($headers, array('title' => $this->getLang('realname')), array('title' => $this->getLang('email')));
+        
+        return array('type' => $type, 'input' => $parsedMatch, 'rows' => $profiles, 'headers' => array_values($headers));
+	}
+    
+    /**
+    * Prepares a card output.
+    *
+    * @param array $parsedMatch The parsed pattern string.
+    * @return array The current lexer state for the match.
+    */
+	function _handleCards($parsedMatch) {
+        // get sqlite handle
+        $sqlite = $this->hlp->_getDB();
+        if(!$sqlite) return;
+        
+		// further parsing of the query string
+		$type = $parsedMatch['path'];
+		parse_str($parsedMatch['query'], $filters);
+		$fragment = $parsedMatch['fragment'];
+        
+        $users = $this->_filterUsers($filters);
+        
+        // get profiles
+		foreach ($users as $current){
+            $profiles[] = $this->hlp->getProfileComponents($current);
+        }
+              
+        return array('type' => $type, 'input' => $parsedMatch, 'cards' => $profiles);
+	}
+    
+    /**
+    * Prepares a table output.
+    *
+    * @param array $filters The associative array containing the filters
+    * @return array The usernames matched by the filter
+    */
+	function _filterUsers($filters) {
+        // get sqlite handle
+        $sqlite = $this->hlp->_getDB();
+        if(!$sqlite) return;
+			
         // Get the users for which a row should be displayed
 		if(count($filters)>0) {
             $cnt = 0;
@@ -143,17 +198,7 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
         }
         $users = $sqlite->res2arr($res);
         
-        // get profiles
-		foreach ($users as $current){
-            $profiles[] = $this->hlp->getProfile($current);
-        }
-        
-        // get field headers
-        $res = $sqlite->query("SELECT [title] FROM [fields]");
-        $headers = $sqlite->res2arr($res);     
-        array_unshift($headers, array('title' => $this->getLang('realname')), array('title' => $this->getLang('email')));
-        
-        return array('type' => 'table', 'input' => $parsedMatch, 'rows' => $profiles, 'headers' => array_values($headers));
+        return $users;
 	}
     
     
@@ -170,6 +215,13 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
     * @see handle()
     */
     function render($mode, &$renderer, $data) {
+        
+        if($mode == 'metadata'){
+            $renderer->meta['relation']['userprofile'][] = $data['type'];
+        }
+        
+        $renderer->info['cache'] = false; // no cache please
+        
         if($mode == 'xhtml'){
             switch($data['type']) {
                 case 'table':
@@ -204,6 +256,22 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                     
                     // close table and return
                     $renderer->doc .= '</table>'.PHP_EOL.PHP_EOL;
+                    return true;
+                    
+                case 'cards':                    
+                    if(!empty($data['cards'])){
+                        $renderer->doc .= '<div class="userprofile card">'.PHP_EOL;
+                        foreach($data['cards'] as $card){
+                            $renderer->doc .= '<h4>'.$card['name'].'</h4>'.PHP_EOL;
+                            $renderer->doc .= '<p><strong>'.$this->getLang('email').':</strong> '.$card['email'].'<br/>'.PHP_EOL;
+                            foreach($card['profile'] as $element) {
+                                if(!empty($element['value'])){
+                                    $renderer->doc .= '<p><strong>'.$element['title'].':</strong> '.$element['value'].'<br/>'.PHP_EOL;
+                                }
+                            }
+                        }
+                        $renderer->doc .= '</p></div>'.PHP_EOL;
+                    }
                     return true;
             }
             

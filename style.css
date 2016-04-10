@@ -5,6 +5,7 @@ div.userprofile.cards.content {
     zoom: 1;
     display: flex;
     flex-flow: row wrap;
+    align-items: stretch;
 }
 div.userprofile.cards.content:before, div.userprofile.cards.content:after {
     content: "";
@@ -40,6 +41,7 @@ div.userprofile.cards.col {
 
 table.userprofile.card {
 	width: 100%;
+    height: 100%;
 	margin-bottom: 1em;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -50,6 +52,7 @@ table.userprofile.card tbody{
     border-width: 1px;
 }
 table.userprofile.card td.profile{
+    height: 100%;
 	padding-left: 0;
 	padding-right: 0;
 }

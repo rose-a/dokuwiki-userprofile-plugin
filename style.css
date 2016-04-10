@@ -1,25 +1,58 @@
-table.userprofile.cards {
-	width: 100%;
+/* Container class */
+div.userprofile.cards.content {    
+    box-sizing: border-box;
+    clear: both;
+    zoom: 1;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: stretch;
+}
+div.userprofile.cards.content:before, div.userprofile.cards.content:after {
+    content: "";
+    display: table;
+}
+div.userprofile.cards.content:after {
+    clear: both;
+}
+
+/* Column */
+div.userprofile.cards.col {
+    width: 100%;
 	border: none;
+    overflow: hidden;
+    display: block;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
-table.userprofile.cards td.col {
-	width: 50%;
-	padding-top: 0;
-	border: none;
-}
-table.userprofile.cards td.col.odd {
-	padding-left: 0;	
-}
-table.userprofile.cards td.col.even {
-	padding-right: 0;	
+
+@media ( min-width: 1000px ) {
+    div.userprofile.cards.col {
+        width: 50%;        
+        float: left;        
+    }
+    div.userprofile.cards.col.odd {
+        padding-right: 0.5em;
+    }
+    div.userprofile.cards.col.even {
+        padding-left: 0.5em;
+    }
 }
 
 table.userprofile.card {
 	width: 100%;
+    height: 100%;
 	margin-bottom: 1em;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+table.userprofile.card tbody{
+	border: inherit;
+    border-width: 1px;
 }
 table.userprofile.card td.profile{
-	border: none;
+    height: 100%;
 	padding-left: 0;
 	padding-right: 0;
 }
@@ -39,4 +72,7 @@ table.userprofile.profile td.title{
 }
 table.userprofile.profile td.value{
 	width: 99%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }

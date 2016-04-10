@@ -2,7 +2,7 @@
 div.userprofile.cards.col {
 	width: 50%;
 	padding-top: 0;
-	border: none;
+	border: 1px red solid;
 }
 div.userprofile.cards.col.odd {
 	padding-left: 0;	

@@ -267,10 +267,8 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                 break;
                     
                 case 'cards':                    
-                    if(!empty($data['cards'])){
-                        $renderer->doc .= '<table class="userprofile cards">'.PHP_EOL;
-                        $renderer->doc .= '<tr>'.PHP_EOL;
-                        $renderer->doc .= '<td class="col odd">'.PHP_EOL;
+                    if(!empty($data['cards'])){                        
+                        $renderer->doc .= '<div class="col odd">'.PHP_EOL;
                         $cnt = 1;
                         $half = count($data['cards'])/2;
                         $col = 1;
@@ -303,13 +301,12 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                                               '  </table>'.PHP_EOL;
                             if($col == 1 && $cnt >= $half){
                                 // Switch to col 2
-                                $renderer->doc .= '</td><td class="col even">'.PHP_EOL;
+                                $renderer->doc .= '</div><div class="col even">'.PHP_EOL;
                                 $col++;
                             }  
                             $cnt++;
                         }
-                        $renderer->doc .= '</td></tr>'.PHP_EOL;
-                        $renderer->doc .= '</table>'.PHP_EOL;
+                        $renderer->doc .= '</div>'.PHP_EOL;
                     }
                     return true;
                 break;

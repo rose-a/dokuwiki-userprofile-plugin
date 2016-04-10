@@ -268,7 +268,7 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                     
                 case 'cards':                    
                     if(!empty($data['cards'])){                        
-                        $renderer->doc .= '<div class="col odd">'.PHP_EOL;
+                        $renderer->doc .= '<div class="userprofile cards col odd">'.PHP_EOL;
                         $cnt = 1;
                         $half = count($data['cards'])/2;
                         $col = 1;
@@ -301,7 +301,7 @@ class syntax_plugin_userprofile extends DokuWiki_Syntax_Plugin {
                                               '  </table>'.PHP_EOL;
                             if($col == 1 && $cnt >= $half){
                                 // Switch to col 2
-                                $renderer->doc .= '</div><div class="col even">'.PHP_EOL;
+                                $renderer->doc .= '</div><div class="userprofile cards col even">'.PHP_EOL;
                                 $col++;
                             }  
                             $cnt++;
